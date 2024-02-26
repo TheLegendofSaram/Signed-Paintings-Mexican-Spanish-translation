@@ -41,7 +41,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static boolean renderBanners;
 	public static boolean renderShields;
 
-	private static boolean loggingEnabled = false;
+	public static boolean loggingEnabled = false;
 
 	@Override
 	public void onInitializeClient() {

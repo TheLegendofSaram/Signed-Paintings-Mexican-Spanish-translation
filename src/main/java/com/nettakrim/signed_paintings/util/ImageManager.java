@@ -15,10 +15,7 @@ import org.lwjgl.BufferUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
@@ -59,6 +56,8 @@ public class ImageManager {
                         blockedURLs.add(s);
                     } else if (phase == 1) {
                         allowedDomains.add(s);
+                    } else if (phase == 2) {
+                        SignedPaintingsClient.loggingEnabled = s.equals("true");
                     }
                 }
                 scanner.close();
@@ -83,6 +82,9 @@ public class ImageManager {
             for (String url : allowedDomains) {
                 s.append("\n").append(url);
             }
+
+            s.append("\n- Detailed Logs -");
+            s.append("\n").append(SignedPaintingsClient.loggingEnabled ? "true" : "false");
 
             writer.write(s.toString());
             writer.close();
@@ -207,12 +209,16 @@ public class ImageManager {
                     URL url = new URL(urlStr);
                     URLConnection connection = url.openConnection();
                     connection.setRequestProperty("User-Agent", "Signed Paintings mod");
+                    connection.setRequestProperty("Sec-Fetch-Site", "same-site");
+                    connection.setRequestProperty("Referer", "https://imgur.com/");
                     connection.connect();
                     return ImageIO.read(connection.getInputStream());
                 } else {
+                    SignedPaintingsClient.info("invalid url string "+urlStr, false);
                     return null;
                 }
             } catch (Throwable e) {
+                SignedPaintingsClient.info("error downloading image: "+e, true);
                 return null;
             }
         });
