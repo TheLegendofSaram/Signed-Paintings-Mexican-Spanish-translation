@@ -3,6 +3,7 @@ package com.nettakrim.signed_paintings.util;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.NativeImage;
@@ -43,7 +44,7 @@ public class ImageManager {
         blockedURLs = new ArrayList<>();
         allowedDomains = new ArrayList<>();
 
-        data = new File(SignedPaintingsClient.client.runDirectory+"/signed_paintings.txt");
+        data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
         try {
             if (data.exists()) {
                 Scanner scanner = new Scanner(data);
@@ -61,6 +62,8 @@ public class ImageManager {
                     }
                 }
                 scanner.close();
+            } else {
+                changesMade = true;
             }
         } catch (IOException e) {
             SignedPaintingsClient.info("Failed to load data", true);
