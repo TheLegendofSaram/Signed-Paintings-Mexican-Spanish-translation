@@ -104,7 +104,7 @@ public class InputSlider {
     private void updateTextField() {
         textFieldWidget.setChangedListener(null);
         textFieldWidget.setText(Float.toString(value));
-        textFieldWidget.setCursorToStart(false);
+        textFieldWidget.setCursorToStart();
         textFieldWidget.setChangedListener(this::onTextChanged);
     }
 
