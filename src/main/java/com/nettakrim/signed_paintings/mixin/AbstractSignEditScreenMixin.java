@@ -356,7 +356,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @ModifyVariable(at = @At("STORE"), method = "renderSignText", ordinal = 0)
     private boolean stopTextCaret(boolean bl) {
         for (InputSlider slider : inputSliders) {
-            if (slider != null && slider.isFocused()) {
+            if (slider != null && slider.isFocused() && selectionManager != null) {
                 selectionManager.setSelectionEnd(selectionManager.getSelectionStart());
                 return false;
             }
