@@ -76,10 +76,16 @@ public class StatusCommand {
     }
 
     private static String getKBString(long bytes) {
-        String s = Float.toString(SignedPaintingsClient.roundFloatTo3DP(bytes/1000f));
+        float amount = bytes/1024f;
+        String unit = "KB";
+        if (amount > 1024f) {
+            amount /= 1024f;
+            unit = "MB";
+        }
+        String s = Float.toString(SignedPaintingsClient.roundFloatTo3DP(amount));
         int index = s.indexOf('.');
-        if (index >= 4) return s.substring(0, index);
-        return s.substring(0, Math.min(5, s.length()));
+        if (index >= 4) return s.substring(0, index)+unit;
+        return s.substring(0, Math.min(5, s.length()))+unit;
     }
 
     private static MutableText getStatusText(String key, Object... args) {
