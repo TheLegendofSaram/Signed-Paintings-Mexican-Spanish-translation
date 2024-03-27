@@ -378,26 +378,33 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Override
     public int signedPaintings$paste(String pasteString, int selectionStart, int selectionEnd, boolean setText) {
-        String[] newMessages = new String[messages.length];
-        System.arraycopy(messages, 0, newMessages, 0, messages.length);
-
         int maxWidthPerLine = this.blockEntity.getMaxTextWidth();
         TextRenderer textRenderer = SignedPaintingsClient.client.textRenderer;
-
-        selectionStart = MathHelper.clamp(selectionStart, 0, newMessages[currentRow].length());
-        selectionEnd = MathHelper.clamp(selectionEnd, 0, newMessages[currentRow].length());
-        newMessages[currentRow] = newMessages[currentRow].substring(0,selectionStart)+pasteString+newMessages[currentRow].substring(selectionEnd);
-        int currentWidth = textRenderer.getWidth(newMessages[currentRow]);
-
-        int cursor = selectionStart+pasteString.length();
 
         if (ImageManager.isValid(pasteString)) {
             String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
             if (SignedPaintingsClient.imageManager.DomainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine*2.5)) {
                 uploadURL = url;
                 uploadButton.visible = true;
+            } else {
+                pasteString = url;
             }
         }
+
+        String[] newMessages = new String[messages.length];
+        System.arraycopy(messages, 0, newMessages, 0, messages.length);
+
+        selectionStart = MathHelper.clamp(selectionStart, 0, newMessages[currentRow].length());
+        selectionEnd = MathHelper.clamp(selectionEnd, 0, newMessages[currentRow].length());
+        if (selectionStart > selectionEnd) {
+            int temp = selectionEnd;
+            selectionEnd = selectionStart;
+            selectionStart = temp;
+        }
+
+        newMessages[currentRow] = newMessages[currentRow].substring(0,selectionStart)+pasteString+newMessages[currentRow].substring(selectionEnd);
+        int currentWidth = textRenderer.getWidth(newMessages[currentRow]);
+        int cursor = selectionStart+pasteString.length();
 
         if (currentWidth < maxWidthPerLine) {
             setCurrentRowMessage(newMessages[currentRow]);

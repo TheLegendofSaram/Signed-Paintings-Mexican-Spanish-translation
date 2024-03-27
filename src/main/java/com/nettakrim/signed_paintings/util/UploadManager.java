@@ -32,11 +32,21 @@ public class UploadManager {
         this.imgurCache = new HashMap<>();
     }
 
-    public void uploadUrlToImgur(String url, Consumer<String> onLoadCallback) {
+    public void uploadUrlToImgur(String url2, Consumer<String> onLoadCallback) {
+        String url = discordSillyness(url2);
+
+        if (SignedPaintingsClient.imageManager.getShortestURLInference(url).startsWith("imgur:")) {
+            SignedPaintingsClient.info(url+" is already an imgur link", false);
+            if (onLoadCallback != null) onLoadCallback.accept(url);
+            return;
+        }
+
         if (imgurCache.containsKey(url)) {
+            SignedPaintingsClient.info(url + " already in cache", false);
             if (onLoadCallback != null) onLoadCallback.accept(imgurCache.get(url));
             return;
         }
+
         upload(() -> uploadUrl(url)).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
             if (link == null || ex != null) {
                 SignedPaintingsClient.info("Failed to upload " + url, true);
@@ -144,5 +154,10 @@ public class UploadManager {
 
         SignedPaintingsClient.info("Failed to read json: "+text, true);
         return null;
+    }
+
+    private String discordSillyness(String url) {
+        if (!url.startsWith("https://media.discordapp.net/attachments/")) return url;
+        return url.replace("&format=webp","");
     }
 }

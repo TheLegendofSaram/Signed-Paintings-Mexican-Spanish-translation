@@ -53,7 +53,7 @@ public class UploadCommand {
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))
         );
         SignedPaintingsClient.say(text);
-        SignedPaintingsClient.uploadManager.uploadUrlToImgur(url, UploadCommand::onLoad);
+        SignedPaintingsClient.uploadManager.uploadUrlToImgur(SignedPaintingsClient.imageManager.applyURLInferences(url), UploadCommand::onLoad);
         return 1;
     }
 
