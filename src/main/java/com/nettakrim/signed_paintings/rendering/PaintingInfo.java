@@ -160,8 +160,10 @@ public class PaintingInfo {
 
         Sprite back = null;
         if (this.backType == BackType.Type.SIGN) {
-            String name = ((AbstractSignBlock)this.blockEntity.getCachedState().getBlock()).getWoodType().name();
-            back = SignedPaintingsClient.client.getSpriteAtlas(new Identifier("minecraft", "textures/atlas/blocks.png")).apply(new Identifier("minecraft", "block/"+name+"_planks"));
+            String name = ((AbstractSignBlock) this.blockEntity.getCachedState().getBlock()).getWoodType().name();
+            try {
+                back = SignedPaintingsClient.client.getSpriteAtlas(new Identifier("minecraft", "textures/atlas/blocks.png")).apply(new Identifier("minecraft", "block/" + name + "_planks"));
+            } catch (Exception ignored) {}
         }
         ModelIdentifier modelIdentifier = BlockModels.getModelId(blockState);
         if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
