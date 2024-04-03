@@ -1,5 +1,7 @@
 package com.nettakrim.signed_paintings.rendering;
 
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -80,7 +82,20 @@ public class Cuboid {
     private void renderFaceRotated(VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, float minU, float maxU, float minV, float maxV, int light) {
         Vector3f normal = rotation.transform(new Vector3f(0, 0, 1));
 
+        //Vector3f cameraNormal = positionCache.normal().transformDirection(new Vector3f(1, 0, 0));
+        //Vector4f pos = positionCache.transform(new Vector4f(0, 0, 0, 1.0F));
+        //Vector4f back = positionCache.transform(new Vector4f(0, 0, 1, 1.0F));
+        //int flipVertical = (rotation.y == 0) ? 1 : -1;
+        //SignedPaintingsClient.info(" "+flipVertical, true);
+        //if (rotation.transform(pos).z*flipVertical > rotation.transform(back).z*flipVertical) {
+        //    return;
+        //}
+
         if (!split) {
+            //SignedPaintingsClient.info(cameraNormal.x+" "+cameraNormal.y+" "+cameraNormal.z, false);
+            // x = right, y = up, z = behind --- relative to camera
+            //SignedPaintingsClient.info(pos.x+" "+pos.y+" "+pos.z+" "+back.z, false);
+
             renderQuad(vertexConsumer, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, rotation, minU, maxU, minV, maxV, normal, light);
             return;
         }

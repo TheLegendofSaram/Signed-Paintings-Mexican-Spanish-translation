@@ -9,8 +9,10 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.SignBlockEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 
 @Mixin(SignBlockEntityRenderer.class)
-public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor {
+public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity> {
     @Shadow @Final private Map<WoodType, SignBlockEntityRenderer.SignModel> typeToModel;
 
     @Inject(
@@ -34,13 +36,33 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
             cancellable = true
     )
     private void onRender(SignBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BlockState state, AbstractSignBlock block, WoodType woodType, Model model, CallbackInfo ci) {
-        if (!SignedPaintingsClient.renderSigns) return;
+        if (renderPaintings(entity, matrices, vertexConsumers, model, light, block, state)) {
+            ci.cancel();
+        }
+    }
+
+    @Override
+    public boolean signedPaintings$enhancedRender(BlockEntity signBlockEntity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+        if (!SignedPaintingsClient.renderSigns) return false;
+
+        BlockState blockState = signBlockEntity.getCachedState();
+        AbstractSignBlock block = (AbstractSignBlock)blockState.getBlock();
+        WoodType woodType = AbstractSignBlock.getWoodType(block);
+        SignBlockEntityRenderer.SignModel model = typeToModel.get(woodType);
+
+        return renderPaintings((SignBlockEntity)signBlockEntity, matrices, vertexConsumers, model, light, block, blockState);
+    }
+
+    @Unique
+    private boolean renderPaintings(SignBlockEntity signBlockEntity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, int light, AbstractSignBlock block, BlockState blockState) {
+        if (!SignedPaintingsClient.renderSigns) return false;
+
         boolean success = false;
-        SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)entity;
+        SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
         accessor.signedPaintings$reloadIfNeeded();
-        success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, light, block, state);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(),  matrices, vertexConsumers, model, light, block, state);
-        if (success) ci.cancel();
+        success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, light, block, blockState);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(),  matrices, vertexConsumers, model, light, block, blockState);
+        return success;
     }
 
     @Unique
@@ -53,19 +75,21 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
     }
 
     @Override
-    public boolean signedPaintings$enhancedRender(BlockEntity signBlockEntity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+    public boolean rendersOutsideBoundingBox(SignBlockEntity blockEntity) {
+        return hasPainting((SignBlockEntityAccessor)blockEntity) || BlockEntityRenderer.super.rendersOutsideBoundingBox(blockEntity);
+    }
+
+    @Override
+    public boolean isInRenderDistance(SignBlockEntity blockEntity, Vec3d pos) {
+        return hasPainting((SignBlockEntityAccessor)blockEntity) || BlockEntityRenderer.super.isInRenderDistance(blockEntity, pos);
+    }
+
+    @Unique
+    private boolean hasPainting(SignBlockEntityAccessor accessor) {
         if (!SignedPaintingsClient.renderSigns) return false;
-
-        BlockState blockState = signBlockEntity.getCachedState();
-        AbstractSignBlock block = (AbstractSignBlock)blockState.getBlock();
-        WoodType woodType = AbstractSignBlock.getWoodType(block);
-        SignBlockEntityRenderer.SignModel model = typeToModel.get(woodType);
-
-        SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
-        accessor.signedPaintings$reloadIfNeeded();
-        boolean success = false;
-        success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, light, block, blockState);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(),  matrices, vertexConsumers, model, light, block, blockState);
-        return success;
+        PaintingInfo paintingInfo = accessor.signedPaintings$getFrontPaintingInfo();
+        if (paintingInfo != null && paintingInfo.isReady()) return true;
+        paintingInfo = accessor.signedPaintings$getBackPaintingInfo();
+        return paintingInfo != null && paintingInfo.isReady();
     }
 }
